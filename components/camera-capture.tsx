@@ -32,8 +32,12 @@ export default function CameraCapture({
 
   useEffect(()=>{
     startCamera()
+    setTimeout(() => {
+      startCamera()
+    }, 2000);
       },[])
   const startCamera = async () => {
+
     setError("")
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
