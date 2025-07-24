@@ -36,22 +36,23 @@ export default function CameraCapture({
       startCamera()
     }, 2000);
       },[])
-  const startCamera = async () => {
-
-    setError("")
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
-      console.log(mediaStream)
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
-        // videoRef.current.play()
+      const startCamera = async () => {
+        setError("")
+        try {
+          const mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } }
+          })
+          console.log(mediaStream)
+          if (videoRef.current) {
+            videoRef.current.srcObject = mediaStream
+          }
+          setStream(mediaStream)
+          setIsCapturing(true)
+        } catch (err) {
+          setError("Camera access failed. Please check your permissions.")
+        }
       }
-      setStream(mediaStream)
-      setIsCapturing(true)
-    } catch (err) {
-      setError("Camera access failed. Please check your permissions.")
-    }
-  }
+      
 
   const stopCamera = () => {
     stream?.getTracks().forEach((track) => track.stop())
