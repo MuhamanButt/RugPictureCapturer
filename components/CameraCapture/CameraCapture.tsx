@@ -1,89 +1,83 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Camera, Check, X, Upload, AlertCircle } from "lucide-react"
-import './../styles.css'
-import {captureImage} from './functionality'
-import { uploadImageToCloudinary, type CloudinaryImage } from "@/lib/rug-storage"
-export default function CameraCapture({
-  rugId,
-  onComplete,
-  onBack,
-}: {
-  rugId: string
-  onComplete: (images: CloudinaryImage[]) => void
-  onBack: () => void
-}) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Camera, Check, X, Upload, AlertCircle } from "lucide-react";
+import "./../styles.css";
+import { captureImage } from "./functionality";
+import { uploadImageToCloudinary, type CloudinaryImage } from "@/lib/rug-storage";
 
-  const [stream, setStream] = useState<MediaStream | null>(null)
-  const [images, setImages] = useState<CloudinaryImage[]>([])
-  const [isCapturing, setIsCapturing] = useState(false)
-  const [error, setError] = useState("")
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState("")
+interface Props {
+  rugId: string;
+  onComplete: (images: CloudinaryImage[]) => void;
+  onBack: () => void;
+}
+
+export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [images, setImages] = useState<CloudinaryImage[]>([]);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [error, setError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
 
   useEffect(() => {
-    return () => stopCamera()
-  }, [])
+    startCamera();
+    return () => stopCamera();
+  }, []);
 
-  useEffect(()=>{
-    startCamera()
-    setTimeout(() => {
-      startCamera()
-    }, 2000);
-      },[])
-      const startCamera = async () => {
-        setError("")
-        try {
-          const mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: "environment" } }
-          })
-          console.log(mediaStream)
-          if (videoRef.current) {
-            videoRef.current.srcObject = mediaStream
-          }
-          setStream(mediaStream)
-          setIsCapturing(true)
-        } catch (err) {
-          setError("Camera access failed. Please check your permissions.")
-        }
+  const startCamera = async () => {
+    setError("");
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
       }
-      
+      setStream(mediaStream);
+      setIsCapturing(true);
+    } catch {
+      setError("Camera access failed. Please check your permissions.");
+    }
+  };
 
   const stopCamera = () => {
-    stream?.getTracks().forEach((track) => track.stop())
-    setStream(null)
-    setIsCapturing(false)
-  }
-const captureImageWrapper = async()=>{
-    await captureImage(videoRef, canvasRef, setIsUploading, setUploadProgress, setImages, rugId, images)
+    stream?.getTracks().forEach((track) => track.stop());
+    setStream(null);
+    setIsCapturing(false);
+  };
 
-}
-  // This is adapted from your second code's capture + upload method
-  
-  
+  const captureImageWrapper = async () => {
+    const video = videoRef.current;
+    if (!video || video.readyState < 2) {
+      alert("Camera not ready yet. Please wait a second.");
+      return;
+    }
+    await captureImage(videoRef, canvasRef, setIsUploading, setUploadProgress, setImages, rugId, images);
+  };
 
-  const handleUploadWrapper = async (files: FileList) => { 
-    const arr = Array.from(files)
-    setIsUploading(true)
+  const handleUploadWrapper = async (files: FileList) => {
+    const arr = Array.from(files);
+    setIsUploading(true);
     for (let i = 0; i < arr.length; i++) {
-      const file = arr[i]
-      setUploadProgress(`Uploading ${file.name} (${i + 1}/${arr.length})`)
+      const file = arr[i];
+      setUploadProgress(`Uploading ${file.name} (${i + 1}/${arr.length})`);
       try {
-        const uploaded = await uploadImageToCloudinary(file, rugId, images.length + i)
-        setImages((prev) => [...prev, uploaded])
-      } catch (err) {
-        alert(`Upload failed for ${file.name}`)
+        const uploaded = await uploadImageToCloudinary(file, rugId, images.length + i);
+        setImages((prev) => [...prev, uploaded]);
+      } catch {
+        alert(`Upload failed for ${file.name}`);
       }
     }
-    setIsUploading(false)
-    setUploadProgress("")
-  }
+    setIsUploading(false);
+    setUploadProgress("");
+  };
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
@@ -95,38 +89,33 @@ const captureImageWrapper = async()=>{
         <span>{images.length} photos</span>
       </div>
 
-      {/* Camera Area */}
       {isCapturing && (
         <Card className="mb-6">
           <CardContent className="p-4">
-            
-          <video
-  ref={videoRef}
-  autoPlay
-  playsInline
-  muted
-  style={{
-    width: "100%",
-    aspectRatio: "3 / 4",
-    objectFit: "cover",
-    border: "1px solid #ccc",
-    maxWidth:"500px"
-  }}
-/>
-
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              style={{
+                width: "100%",
+                aspectRatio: "3 / 4",
+                objectFit: "cover",
+                border: "1px solid #ccc",
+                maxWidth: "500px",
+              }}
+            />
             <canvas ref={canvasRef} className="hidden" />
             <div className="mt-4 flex justify-center space-x-4">
               <Button onClick={captureImageWrapper} className="capture-btn" disabled={isUploading}>
                 <Camera className="h-5 mr-1" />
                 Capture
               </Button>
-             
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Upload Area */}
       {!isCapturing && (
         <Card className="mb-6">
           <CardContent className="p-6 text-center">
@@ -157,16 +146,17 @@ const captureImageWrapper = async()=>{
         </Card>
       )}
 
-      {/* Upload progress */}
       {isUploading && (
         <div className="text-center mb-4 text-blue-600 font-medium">
           {uploadProgress || "Uploading..."}
         </div>
       )}
- <Button className="my-4 w-full" onClick={() => onComplete(images)} disabled={isUploading}>
-              <Check className="w-4 h-4 mr-2" />
-              Done ({images.length})
-            </Button>
+
+      <Button className="my-4 w-full" onClick={() => onComplete(images)} disabled={isUploading}>
+        <Check className="w-4 h-4 mr-2" />
+        Done ({images.length})
+      </Button>
+
       {images.length > 0 && (
         <Card className="mb-6">
           <CardContent>
@@ -178,7 +168,7 @@ const captureImageWrapper = async()=>{
                     src={img.secureUrl}
                     className="w-full h-32 object-cover rounded"
                     alt={`Image ${i + 1}`}
-                    style={{width:"300px",height:"400px"}}
+                    style={{ width: "300px", height: "400px" }}
                   />
                   <Button
                     size="sm"
@@ -192,10 +182,9 @@ const captureImageWrapper = async()=>{
                 </div>
               ))}
             </div>
-           
           </CardContent>
         </Card>
       )}
     </div>
-  )
+  );
 }

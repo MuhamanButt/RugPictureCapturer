@@ -29,7 +29,8 @@ export default function MainMenu({ onBack }: MainMenuProps) {
           <Button variant="ghost" size="sm" onClick={onBack} className="mr-2">
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">Main Menu</h1>
+          <h1 className="text-2xl font-bold text-gray-900 me-2">Main Menu</h1>
+          v1.0.1
         </div>
 
         <div className="space-y-4">
