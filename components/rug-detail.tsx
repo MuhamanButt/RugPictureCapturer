@@ -114,18 +114,18 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
             <h1 className="text-2xl font-bold text-gray-900">{rug.id}</h1>
           </div>
 
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+          
+        </div>
+        <div className="flex space-x-2 mb-2">
+            <Button style={{width:"100%"}} variant="outline" onClick={() => fileInputRef.current?.click()}>
               <Plus className="w-4 h-4 mr-2" />
               Add Images
             </Button>
-            <Button onClick={() => downloadAsZip(rug)}>
+            <Button style={{width:"100%"}} onClick={() => downloadAsZip(rug)}>
               <Download className="w-4 h-4 mr-2" />
               Download
             </Button>
           </div>
-        </div>
-
         <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleAddImages} className="hidden" />
 
         <Card className="mb-6">
@@ -133,7 +133,7 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
             <CardTitle>Rug Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-1 text-sm">
               <div>
                 <span className="font-medium text-gray-600">Type:</span>
                 <div className="font-mono">{rug.type}</div>
@@ -175,7 +175,7 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-1">
             {images.map((image, index) => (
               <div
                 key={image.publicId}
