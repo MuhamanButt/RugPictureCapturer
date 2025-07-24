@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Plus, Grid3X3 } from "lucide-react"
 import { useState } from "react"
 import AddRugFlow from './AddRugFlow/AddRugFlow'
-import ViewRugs from "./view-rugs"
+import ViewRugs from "./ViewRugs/view-rugs"
 
 interface MainMenuProps {
   onBack: () => void
@@ -30,7 +30,7 @@ export default function MainMenu({ onBack }: MainMenuProps) {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h1 className="text-2xl font-bold text-gray-900 me-2">Main Menu</h1>
-          v1.0.1
+          v1.0.2
         </div>
 
         <div className="space-y-4">

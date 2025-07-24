@@ -28,6 +28,9 @@ export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
 
   useEffect(() => {
     startCamera();
+    setTimeout(() => {
+        startCamera();
+    }, 2000);
     return () => stopCamera();
   }, []);
 
