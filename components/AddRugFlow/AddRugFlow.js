@@ -4,39 +4,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Camera } from "lucide-react"
 import { useState } from "react"
-import CameraCapture from "./camera-capture"
 import { generateRugId, saveRug } from "@/lib/rug-storage"
+import { COLORS, RUG_TYPES, SIZES } from "./functionality"
+import CameraCapture from "../CameraCapture/CameraCapture"
 
-interface AddRugFlowProps {
-  onBack: () => void
-}
 
-const RUG_TYPES = [
-  { label: "Turkish", code: "T" },
-  { label: "Modern", code: "M" },
-  { label: "Persian", code: "P" },
-  { label: "Nayyer", code: "N" },
-]
-
-const COLORS = [
-  { label: "White", code: "WHT" },
-  { label: "Black", code: "BLK" },
-  { label: "Brown", code: "BRN" },
-  { label: "Red", code: "RED" },
-  { label: "Green", code: "GRN" },
-  { label: "Turquoise", code: "TRQ" },
-  { label: "Blue", code: "BLU" },
-  { label: "Cream", code: "CRM" },
-]
-
-const SIZES = [
-  { label: "3x5", code: "35" },
-  { label: "4x5.5", code: "46" },
-  { label: "5x7.5", code: "58" },
-  { label: "7x10", code: "710" },
-]
-
-export default function AddRugFlow({ onBack }: AddRugFlowProps) {
+export default function AddRugFlow({ onBack }) {
   const [step, setStep] = useState(1)
   const [selectedType, setSelectedType] = useState("")
   const [selectedSize, setSelectedSize] = useState("")
@@ -48,14 +21,13 @@ export default function AddRugFlow({ onBack }: AddRugFlowProps) {
     if (step < 3) {
       setStep(step + 1)
     } else {
-      // Generate ID and proceed to camera
       const id = generateRugId(selectedType, selectedSize, selectedColor)
       setRugId(id)
       setShowCamera(true)
     }
   }
 
-  const handleCameraComplete = (images: any[]) => {
+  const handleCameraComplete = (images) => {
     // Save the rug with images
     saveRug({
       id: rugId,
@@ -66,7 +38,6 @@ export default function AddRugFlow({ onBack }: AddRugFlowProps) {
       createdAt: new Date().toISOString(),
     })
 
-    // Reset and go back
     setStep(1)
     setSelectedType("")
     setSelectedSize("")
@@ -102,8 +73,20 @@ export default function AddRugFlow({ onBack }: AddRugFlowProps) {
           </Button>
           <h1 className="text-2xl font-bold text-gray-900">Add New Rug</h1>
         </div>
-
-        <div className="mb-6">
+        {(selectedType || selectedSize || selectedColor) && (
+          <Card className="mt-4">
+            <CardContent className="pt-6">
+              <h3 className="font-medium mb-2">Preview ID:</h3>
+              <div className="font-mono text-lg bg-gray-100 p-2 rounded">
+                {selectedType}
+                {selectedSize}
+                {selectedColor}-?
+              </div>
+              <p className="text-xs text-gray-500 mt-1">The number will be auto-generated based on existing rugs</p>
+            </CardContent>
+          </Card>
+        )}
+        <div className="mb-6 mt-3">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-600">Step {step} of 3</span>
             <span className="text-sm text-gray-500">{Math.round((step / 3) * 100)}%</span>
@@ -156,27 +139,29 @@ export default function AddRugFlow({ onBack }: AddRugFlowProps) {
                   </Button>
                 ))}
 
-              {step === 3 &&
-                COLORS.map((color) => (
-                  <Button
-                    key={color.code}
-                    variant={selectedColor === color.code ? "default" : "outline"}
-                    className="h-16 text-left justify-start"
-                    onClick={() => setSelectedColor(color.code)}
-                  >
-                    <div>
-                      <div className="font-medium">{color.label}</div>
-                      <div className="text-xs opacity-70">{color.code}</div>
-                    </div>
-                  </Button>
-                ))}
+{step === 3 &&
+  COLORS.map((color) => (
+    <Button
+      key={color.code}
+      variant={selectedColor === color.code ? "default" : "outline"}
+      style={{backgroundColor:color.hex,}}
+      className={`h-16 text-left justify-start ${color.bg} ${color.text}`}
+      onClick={() => setSelectedColor(color.code)}
+    >
+      <div>
+        <div className="font-medium">{color.label}</div>
+        <div className="text-xs opacity-70">{color.code}</div>
+      </div>
+    </Button>
+  ))}
+
             </div>
 
-            <div className="mt-6 flex justify-between">
-              <Button variant="outline" onClick={() => (step > 1 ? setStep(step - 1) : onBack())}>
+            <div className="mt-6 flex justify-between gap-2">
+              <Button variant="outline" style={{width:"100%"}} onClick={() => (step > 1 ? setStep(step - 1) : onBack())}>
                 Back
               </Button>
-              <Button onClick={handleNext} disabled={!canProceed()} className="flex items-center">
+              <Button onClick={handleNext} style={{width:"100%"}} disabled={!canProceed()} className="flex items-center">
                 {step === 3 ? (
                   <>
                     <Camera className="w-4 h-4 mr-2" />
@@ -190,19 +175,7 @@ export default function AddRugFlow({ onBack }: AddRugFlowProps) {
           </CardContent>
         </Card>
 
-        {(selectedType || selectedSize || selectedColor) && (
-          <Card className="mt-4">
-            <CardContent className="pt-6">
-              <h3 className="font-medium mb-2">Preview ID:</h3>
-              <div className="font-mono text-lg bg-gray-100 p-2 rounded">
-                {selectedType}
-                {selectedSize}
-                {selectedColor}-?
-              </div>
-              <p className="text-xs text-gray-500 mt-1">The number will be auto-generated based on existing rugs</p>
-            </CardContent>
-          </Card>
-        )}
+        
       </div>
     </div>
   )

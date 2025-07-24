@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Camera, Check, X, Upload, AlertCircle } from "lucide-react"
+import './../styles.css'
+import {captureImage} from './functionality'
 import { uploadImageToCloudinary, type CloudinaryImage } from "@/lib/rug-storage"
-
 export default function CameraCapture({
   rugId,
   onComplete,
@@ -59,80 +60,15 @@ export default function CameraCapture({
     setStream(null)
     setIsCapturing(false)
   }
+const captureImageWrapper = async()=>{
+    await captureImage(videoRef, canvasRef, setIsUploading, setUploadProgress, setImages, rugId, images)
 
+}
   // This is adapted from your second code's capture + upload method
-  const captureImage = async () => {
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    if (!video || !canvas) return
   
-    // Set desired aspect ratio: 3:4 (width:height)
-    const desiredAspectRatio = 3 / 4
-    const videoWidth = video.videoWidth
-    const videoHeight = video.videoHeight
-    const currentAspectRatio = videoWidth / videoHeight
-  
-    let cropWidth = videoWidth
-    let cropHeight = videoHeight
-  
-    // Crop the image to match the 3:4 aspect ratio
-    if (currentAspectRatio > desiredAspectRatio) {
-      // Too wide, crop horizontally
-      cropWidth = videoHeight * desiredAspectRatio
-    } else {
-      // Too tall, crop vertically
-      cropHeight = videoWidth / desiredAspectRatio
-    }
-  
-    const offsetX = (videoWidth - cropWidth) / 2
-    const offsetY = (videoHeight - cropHeight) / 2
-  
-    canvas.width = cropWidth
-    canvas.height = cropHeight
-  
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-  
-    ctx.drawImage(
-      video,
-      offsetX,
-      offsetY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    )
-  
-    try {
-      const blob: Blob = await new Promise((resolve, reject) => {
-        canvas.toBlob(
-          (blob) => {
-            if (blob) resolve(blob)
-            else reject(new Error("Failed to capture image"))
-          },
-          "image/jpeg",
-          0.8
-        )
-      })
-  
-      const file = new File([blob], `${rugId}_${Date.now()}.jpg`, { type: "image/jpeg" })
-  
-      setIsUploading(true)
-      setUploadProgress("Uploading captured image...")
-      const uploaded = await uploadImageToCloudinary(file, rugId, images.length)
-      setImages((prev) => [...prev, uploaded])
-    } catch (e) {
-      alert("Upload failed")
-    } finally {
-      setIsUploading(false)
-      setUploadProgress("")
-    }
-  }
   
 
-  const handleUpload = async (files: FileList) => {
+  const handleUploadWrapper = async (files: FileList) => { 
     const arr = Array.from(files)
     setIsUploading(true)
     for (let i = 0; i < arr.length; i++) {
@@ -155,7 +91,7 @@ export default function CameraCapture({
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <h1 className="text-xl font-bold">Add Photos - {rugId}</h1>
+        <h1 className="add-photos-header">Add Photos - {rugId}</h1>
         <span>{images.length} photos</span>
       </div>
 
@@ -164,23 +100,27 @@ export default function CameraCapture({
         <Card className="mb-6">
           <CardContent className="p-4">
             
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full max-h-96 bg-black rounded-lg"
-              style={{ objectFit: "cover" }}
-            />
+          <video
+  ref={videoRef}
+  autoPlay
+  playsInline
+  muted
+  style={{
+    width: "100%",
+    aspectRatio: "3 / 4",
+    objectFit: "cover",
+    border: "1px solid #ccc",
+    maxWidth:"500px"
+  }}
+/>
+
             <canvas ref={canvasRef} className="hidden" />
             <div className="mt-4 flex justify-center space-x-4">
-              <Button onClick={captureImage} disabled={isUploading}>
-                <Camera className="w-5 h-5 mr-1" />
+              <Button onClick={captureImageWrapper} className="capture-btn" disabled={isUploading}>
+                <Camera className="h-5 mr-1" />
                 Capture
               </Button>
-              <Button onClick={stopCamera} variant="outline" disabled={isUploading}>
-                Stop
-              </Button>
+             
             </div>
           </CardContent>
         </Card>
@@ -197,7 +137,7 @@ export default function CameraCapture({
               multiple
               accept="image/*"
               className="hidden"
-              onChange={(e) => e.target.files && handleUpload(e.target.files)}
+              onChange={(e) => e.target.files && handleUploadWrapper(e.target.files)}
             />
             <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
               <Upload className="w-4 h-4 mr-2" />
@@ -223,8 +163,10 @@ export default function CameraCapture({
           {uploadProgress || "Uploading..."}
         </div>
       )}
-
-      {/* Uploaded images preview */}
+ <Button className="my-4 w-full" onClick={() => onComplete(images)} disabled={isUploading}>
+              <Check className="w-4 h-4 mr-2" />
+              Done ({images.length})
+            </Button>
       {images.length > 0 && (
         <Card className="mb-6">
           <CardContent>
@@ -236,6 +178,7 @@ export default function CameraCapture({
                     src={img.secureUrl}
                     className="w-full h-32 object-cover rounded"
                     alt={`Image ${i + 1}`}
+                    style={{width:"300px",height:"400px"}}
                   />
                   <Button
                     size="sm"
@@ -249,10 +192,7 @@ export default function CameraCapture({
                 </div>
               ))}
             </div>
-            <Button className="mt-4 w-full" onClick={() => onComplete(images)} disabled={isUploading}>
-              <Check className="w-4 h-4 mr-2" />
-              Done ({images.length})
-            </Button>
+           
           </CardContent>
         </Card>
       )}

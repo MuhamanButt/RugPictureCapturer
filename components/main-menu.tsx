@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Plus, Grid3X3 } from "lucide-react"
 import { useState } from "react"
-import AddRugFlow from "./add-rug-flow"
+import AddRugFlow from './AddRugFlow/AddRugFlow'
 import ViewRugs from "./view-rugs"
 
 interface MainMenuProps {
