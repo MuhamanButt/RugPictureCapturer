@@ -1,5 +1,4 @@
 import { uploadImageToCloudinary } from "@/lib/rug-storage";
-import imageCompression from "browser-image-compression";
 
 export const captureImage = async (
   videoRef,
@@ -14,7 +13,7 @@ export const captureImage = async (
   const canvas = canvasRef.current;
   if (!video || !canvas) return;
 
-  // Set desired aspect ratio: 3:4 (width:height)
+  // Force high-res capture from video (assumes your camera supports it)
   const desiredAspectRatio = 3 / 4;
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
@@ -23,7 +22,6 @@ export const captureImage = async (
   let cropWidth = videoWidth;
   let cropHeight = videoHeight;
 
-  // Crop the image to match the 3:4 aspect ratio
   if (currentAspectRatio > desiredAspectRatio) {
     cropWidth = videoHeight * desiredAspectRatio;
   } else {
@@ -52,37 +50,29 @@ export const captureImage = async (
   );
 
   try {
-    // Export as WebP with high quality
-    const blob = await new Promise((resolve, reject) => {
+    // Capture as high-quality WebP (no compression)
+    const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
           if (blob) resolve(blob);
           else reject(new Error("Failed to capture image"));
         },
         "image/webp",
-        0.95 // high quality WebP
+        1.0
       );
     });
 
-    // Compress the WebP blob (optional but can improve size)
-    const compressedBlob = await imageCompression(blob, {
-      maxSizeMB: 1,               // allow up to 1MB for high quality
-      maxWidthOrHeight: 1600,     // larger max dimensions for better quality
-      useWebWorker: true,
-      initialQuality: 0.95,       // keep quality high during compression
-      fileType: "image/webp",
-    });
-
-    // Create file from compressed WebP blob
-    const file = new File([compressedBlob], `${rugId}_${Date.now()}.webp`, {
+    const file = new File([blob], `${rugId}_${Date.now()}.webp`, {
       type: "image/webp",
     });
 
     setIsUploading(true);
     setUploadProgress("Uploading captured image...");
+
     const uploaded = await uploadImageToCloudinary(file, rugId, images.length);
     setImages((prev) => [...prev, uploaded]);
   } catch (e) {
+    console.error(e);
     alert("Upload failed");
   } finally {
     setIsUploading(false);
