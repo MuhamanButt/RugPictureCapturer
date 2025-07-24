@@ -81,7 +81,7 @@ export default function CameraCapture({ rugId }: { rugId: string }) {
         ref={videoRef}
         autoPlay
         playsInline
-        style={{ width: "100%", maxWidth: "500px", border: "1px solid #ccc" }}
+        style={{ width: "300px", height: "400px", border: "1px solid #ccc" }}
       />
 
       <br />

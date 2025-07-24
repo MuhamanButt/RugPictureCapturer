@@ -65,14 +65,46 @@ export default function CameraCapture({
     const video = videoRef.current
     const canvas = canvasRef.current
     if (!video || !canvas) return
-
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
+  
+    // Set desired aspect ratio: 3:4 (width:height)
+    const desiredAspectRatio = 3 / 4
+    const videoWidth = video.videoWidth
+    const videoHeight = video.videoHeight
+    const currentAspectRatio = videoWidth / videoHeight
+  
+    let cropWidth = videoWidth
+    let cropHeight = videoHeight
+  
+    // Crop the image to match the 3:4 aspect ratio
+    if (currentAspectRatio > desiredAspectRatio) {
+      // Too wide, crop horizontally
+      cropWidth = videoHeight * desiredAspectRatio
+    } else {
+      // Too tall, crop vertically
+      cropHeight = videoWidth / desiredAspectRatio
+    }
+  
+    const offsetX = (videoWidth - cropWidth) / 2
+    const offsetY = (videoHeight - cropHeight) / 2
+  
+    canvas.width = cropWidth
+    canvas.height = cropHeight
+  
     const ctx = canvas.getContext("2d")
     if (!ctx) return
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
+  
+    ctx.drawImage(
+      video,
+      offsetX,
+      offsetY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    )
+  
     try {
       const blob: Blob = await new Promise((resolve, reject) => {
         canvas.toBlob(
@@ -81,12 +113,12 @@ export default function CameraCapture({
             else reject(new Error("Failed to capture image"))
           },
           "image/jpeg",
-          0.8 // quality, from second code
+          0.8
         )
       })
-
+  
       const file = new File([blob], `${rugId}_${Date.now()}.jpg`, { type: "image/jpeg" })
-
+  
       setIsUploading(true)
       setUploadProgress("Uploading captured image...")
       const uploaded = await uploadImageToCloudinary(file, rugId, images.length)
@@ -98,6 +130,7 @@ export default function CameraCapture({
       setUploadProgress("")
     }
   }
+  
 
   const handleUpload = async (files: FileList) => {
     const arr = Array.from(files)
