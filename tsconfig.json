@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/CameraCapture/CameraCapture.js", "components/CameraCapture/UploadArea.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/CameraCapture/CameraCapture.js", "components/CameraCapture/UploadArea.js", "components/CameraCapture/functionality.js", "components/rug-detail.js"],
   "exclude": ["node_modules"]
 }

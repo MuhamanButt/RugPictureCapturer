@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react"
 import { getAllRugs, type Rug } from "@/lib/rug-storage"
 import { downloadAllAsZip } from "@/lib/download-utils"
-import RugDetail from "../rug-detail"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import RugToolbar from "./RugToolbar"
 import RugGrid from "./RugGrid"
+import RugDetail from "../rug-detail"
 
 interface ViewRugsProps {
   onBack: () => void

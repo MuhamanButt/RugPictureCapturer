@@ -1,11 +1,12 @@
-import { type CloudinaryImage, uploadImageToCloudinary } from "@/lib/rug-storage";
+import {  uploadImageToCloudinary } from "@/lib/rug-storage";
+import imageCompression from "browser-image-compression";
 
 // Start the camera
 export const startCameraStream = async (
-  videoRef: React.RefObject<HTMLVideoElement | null>,  // allow null
-  setStream: React.Dispatch<React.SetStateAction<MediaStream | null>>,
-  setIsCapturing: React.Dispatch<React.SetStateAction<boolean>>,
-  setError: React.Dispatch<React.SetStateAction<string>>
+  videoRef,
+  setStream,
+  setIsCapturing,
+  setError
 ) => {
 
   try {
@@ -26,7 +27,7 @@ export const startCameraStream = async (
 };
 
 // Stop the camera
-export const stopCameraStream = (stream: MediaStream | null, setStream: (val: null) => void, setIsCapturing: (val: boolean) => void) => {
+export const stopCameraStream = (stream, setStream, setIsCapturing) => {
   stream?.getTracks().forEach((track) => track.stop());
   setStream(null);
   setIsCapturing(false);
@@ -34,11 +35,11 @@ export const stopCameraStream = (stream: MediaStream | null, setStream: (val: nu
 
 // Capture and store blob locally
 export const captureImage = async (
-  videoRef: React.RefObject<HTMLVideoElement | null>,   // allow null here too
-  canvasRef: React.RefObject<HTMLCanvasElement | null>,
-  setCapturedImages: (fn: (prev: any[]) => any[]) => void,
-  rugId: string
-): Promise<void> => {
+  videoRef,   // allow null here too
+  canvasRef,
+  setCapturedImages,
+  rugId
+) => {
   const video = videoRef.current;
   const canvas = canvasRef.current;
   if (!video || !canvas) {
@@ -72,7 +73,7 @@ export const captureImage = async (
   ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
 
   try {
-    const blob: Blob = await new Promise((resolve, reject) => {
+    const blob = await new Promise((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
           if (blob) resolve(blob);
@@ -93,12 +94,12 @@ export const captureImage = async (
 
 // Upload single or multiple files to Cloudinary
 export const uploadCapturedImages = async (
-  capturedImages: { blob: Blob; fileName: string }[],
-  rugId: string,
-  startIndex: number,
-  setUploadProgress: (msg: string) => void
-): Promise<CloudinaryImage[]> => {
-  const uploadedImages: CloudinaryImage[] = [];
+  capturedImages,
+  rugId,
+  startIndex,
+  setUploadProgress
+)=> {
+  const uploadedImages = [];
 
   for (let i = 0; i < capturedImages.length; i++) {
     const { blob, fileName } = capturedImages[i];
@@ -119,24 +120,37 @@ export const uploadCapturedImages = async (
 
 // Upload file input images
 export const uploadDeviceImages = async (
-  files: FileList,
-  rugId: string,
-  existingImageCount: number,
-  setUploadProgress: (msg: string) => void
-): Promise<CloudinaryImage[]> => {
+  files,
+  rugId,
+  existingImageCount,
+  setUploadProgress
+)=> {
   const arr = Array.from(files);
-  const uploaded: CloudinaryImage[] = [];
+  const uploaded = [];
 
   for (let i = 0; i < arr.length; i++) {
     const file = arr[i];
-    setUploadProgress(`Uploading ${file.name} (${i + 1}/${arr.length})`);
+    setUploadProgress(`Compressing ${file.name} (${i + 1}/${arr.length})`);
+
     try {
-      const result = await uploadImageToCloudinary(file, rugId, existingImageCount + i);
+      // ✅ Compress file
+      const compressedFile = await imageCompression(file, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1600,
+        useWebWorker: true,
+      });
+
+      setUploadProgress(`Uploading ${compressedFile.name} (${i + 1}/${arr.length})`);
+
+      // ✅ Upload compressed file
+      const result = await uploadImageToCloudinary(compressedFile, rugId, existingImageCount + i);
       uploaded.push(result);
-    } catch {
+    } catch (err) {
+      console.error(`Failed to process ${file.name}:`, err);
       alert(`Upload failed for ${file.name}`);
     }
   }
 
   return uploaded;
 };
+
