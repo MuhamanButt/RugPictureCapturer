@@ -73,19 +73,18 @@ export default function AddRugFlow({ onBack }) {
           </Button>
           <h1 className="text-2xl font-bold text-gray-900">Add New Rug</h1>
         </div>
-        {(selectedType || selectedSize || selectedColor) && (
+        
           <Card className="mt-4">
             <CardContent className="pt-6">
               <h3 className="font-medium mb-2">Preview ID:</h3>
               <div className="font-mono text-lg bg-gray-100 p-2 rounded">
-                {selectedType}
-                {selectedSize}
-                {selectedColor}-?
+                {selectedType || ""}
+                {selectedSize || ""}
+                {selectedColor || ""}-?
               </div>
               <p className="text-xs text-gray-500 mt-1">The number will be auto-generated based on existing rugs</p>
             </CardContent>
           </Card>
-        )}
         <div className="mb-6 mt-3">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-600">Step {step} of 3</span>
@@ -115,7 +114,7 @@ export default function AddRugFlow({ onBack }) {
                     key={type.code}
                     variant={selectedType === type.code ? "default" : "outline"}
                     className="h-16 text-left justify-start"
-                    onClick={() => setSelectedType(type.code)}
+                    onClick={() => {setSelectedType(type.code);handleNext()}}
                   >
                     <div>
                       <div className="font-medium">{type.label}</div>
@@ -130,7 +129,7 @@ export default function AddRugFlow({ onBack }) {
                     key={size.code}
                     variant={selectedSize === size.code ? "default" : "outline"}
                     className="h-16 text-left justify-start"
-                    onClick={() => setSelectedSize(size.code)}
+                    onClick={() => {setSelectedSize(size.code);handleNext()}}
                   >
                     <div>
                       <div className="font-medium">{size.label}</div>
@@ -146,7 +145,7 @@ export default function AddRugFlow({ onBack }) {
       variant={selectedColor === color.code ? "default" : "outline"}
       style={{backgroundColor:color.hex,}}
       className={`h-16 text-left justify-start ${color.bg} ${color.text}`}
-      onClick={() => setSelectedColor(color.code)}
+      onClick={() => {setSelectedColor(color.code);handleNext()}}
     >
       <div>
         <div className="font-medium">{color.label}</div>
@@ -161,7 +160,7 @@ export default function AddRugFlow({ onBack }) {
               <Button variant="outline" style={{width:"100%"}} onClick={() => (step > 1 ? setStep(step - 1) : onBack())}>
                 Back
               </Button>
-              <Button onClick={handleNext} style={{width:"100%"}} disabled={!canProceed()} className="flex items-center">
+              {/* <Button onClick={handleNext} style={{width:"100%"}} disabled={!canProceed()} className="flex items-center">
                 {step === 3 ? (
                   <>
                     <Camera className="w-4 h-4 mr-2" />
@@ -170,7 +169,7 @@ export default function AddRugFlow({ onBack }) {
                 ) : (
                   "Next"
                 )}
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>
