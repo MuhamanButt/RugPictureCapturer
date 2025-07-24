@@ -1,74 +1,50 @@
-import type { Rug } from "./rug-storage"
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import type { Rug } from "./rug-storage";
 
-// Download image from URL
-async function downloadImageFromUrl(url: string, filename: string): Promise<Blob> {
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to download image: ${response.statusText}`)
-  }
-  return response.blob()
+async function downloadImageAsBlob(url: string): Promise<Blob> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+  return response.blob();
 }
 
-// Create and download files
-async function createDownloads(files: { name: string; url: string }[], zipName: string) {
-  if (files.length === 1) {
-    // Single file download
+export async function downloadAsZip(rug: Rug) {
+  const zip = new JSZip();
+
+  // Add images to zip
+  for (let i = 0; i < rug.images.length; i++) {
+    const image = rug.images[i];
     try {
-      const blob = await downloadImageFromUrl(files[0].url, files[0].name)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = files[0].name
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error("Error downloading file:", error)
-      alert("Failed to download file. Please try again.")
+      const blob = await downloadImageAsBlob(image.secureUrl);
+      zip.file(`${rug.id}_${i + 1}.jpg`, blob);
+    } catch (e) {
+      console.error(`Failed to download image ${i + 1}:`, e);
     }
-  } else {
-    // Multiple files - download each individually
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
+  }
+
+  // Generate zip file blob
+  const content = await zip.generateAsync({ type: "blob" });
+
+  // Trigger download
+  saveAs(content, `${rug.id}.zip`);
+}
+
+export async function downloadAllAsZip(rugs: Rug[]) {
+  const zip = new JSZip();
+
+  for (const rug of rugs) {
+    const folder = zip.folder(rug.id) ?? zip;
+    for (let i = 0; i < rug.images.length; i++) {
       try {
-        await new Promise((resolve) => setTimeout(resolve, i * 200)) // Delay between downloads
-        const blob = await downloadImageFromUrl(file.url, file.name)
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = file.name
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-      } catch (error) {
-        console.error(`Error downloading ${file.name}:`, error)
+        const blob = await downloadImageAsBlob(rug.images[i].secureUrl);
+        folder.file(`${rug.id}_${i + 1}.jpg`, blob);
+      } catch (e) {
+        console.error(`Failed to download image ${rug.id}_${i + 1}:`, e);
       }
     }
   }
-}
 
-export function downloadAsZip(rug: Rug) {
-  const files = rug.images.map((image, index) => ({
-    name: `${rug.id}_${index + 1}.jpg`,
-    url: image.secureUrl,
-  }))
+  const content = await zip.generateAsync({ type: "blob" });
 
-  createDownloads(files, `${rug.id}.zip`)
-}
-
-export function downloadAllAsZip(rugs: Rug[]) {
-  const files: { name: string; url: string }[] = []
-
-  rugs.forEach((rug) => {
-    rug.images.forEach((image, index) => {
-      files.push({
-        name: `${rug.id}/${rug.id}_${index + 1}.jpg`,
-        url: image.secureUrl,
-      })
-    })
-  })
-
-  createDownloads(files, "all_rugs.zip")
+  saveAs(content, "all_rugs.zip");
 }

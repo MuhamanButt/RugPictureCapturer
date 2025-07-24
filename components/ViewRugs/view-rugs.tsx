@@ -77,7 +77,7 @@ export default function ViewRugs({ onBack }: ViewRugsProps) {
             <Button variant="ghost" size="sm" onClick={onBack} className="mr-2">
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">View Rugs</h1>
+            <h3 className="text-lg font-bold text-gray-900">View Rugs</h3>
           </div>
 
           {filteredRugs.length > 0 && (

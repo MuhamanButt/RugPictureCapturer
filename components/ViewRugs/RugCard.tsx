@@ -13,7 +13,7 @@ export default function RugCard({ rug, onClick }: RugCardProps) {
   return (
     <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={onClick}>
       <CardContent className="p-1">
-        <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+        <div className="aspect-square bg-gray-100 rounded-lg mb-0 overflow-hidden">
           {rug.images.length > 0 ? (
             <img
               src={rug.images[0].secureUrl || "/placeholder.svg"}
@@ -28,9 +28,9 @@ export default function RugCard({ rug, onClick }: RugCardProps) {
         </div>
 
         <div className="space-y-1">
-          <h3 className="font-mono font-bold text-lg">{rug.id}</h3>
+          <h3 className="font-mono font-bold text-lg" style={{fontSize:"14px"}}>{rug.id}</h3>
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>{rug.images.length} photos</span>
+            <span style={{fontSize:"10px"}}>{rug.images.length} photos</span>
             <Button
               size="sm"
               variant="ghost"

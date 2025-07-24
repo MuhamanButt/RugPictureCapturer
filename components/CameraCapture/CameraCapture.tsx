@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Camera, Check, X, Upload, AlertCircle } from "lucide-react";
 import "./../styles.css";
-import { captureImage } from "./functionality";
 import { uploadImageToCloudinary, type CloudinaryImage } from "@/lib/rug-storage";
 
 interface Props {
@@ -14,13 +13,19 @@ interface Props {
   onBack: () => void;
 }
 
+interface CapturedImage {
+  blob: Blob;
+  fileName: string;
+}
+
 export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [images, setImages] = useState<CloudinaryImage[]>([]);
+  const [images, setImages] = useState<CloudinaryImage[]>([]); // uploaded images
+  const [capturedImages, setCapturedImages] = useState<CapturedImage[]>([]); // local captures before upload
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -29,7 +34,7 @@ export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
   useEffect(() => {
     startCamera();
     setTimeout(() => {
-        startCamera();
+      startCamera();
     }, 2000);
     return () => stopCamera();
   }, []);
@@ -56,15 +61,97 @@ export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
     setIsCapturing(false);
   };
 
+  // Capture the image and store locally (blob), do NOT upload now
   const captureImageWrapper = async () => {
     const video = videoRef.current;
-    if (!video || video.readyState < 2) {
+    const canvas = canvasRef.current;
+    if (!video || !canvas) {
       alert("Camera not ready yet. Please wait a second.");
       return;
     }
-    await captureImage(videoRef, canvasRef, setIsUploading, setUploadProgress, setImages, rugId, images);
+
+    const desiredAspectRatio = 3 / 4;
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+    const currentAspectRatio = videoWidth / videoHeight;
+
+    let cropWidth = videoWidth;
+    let cropHeight = videoHeight;
+
+    if (currentAspectRatio > desiredAspectRatio) {
+      cropWidth = videoHeight * desiredAspectRatio;
+    } else {
+      cropHeight = videoWidth / desiredAspectRatio;
+    }
+
+    const offsetX = (videoWidth - cropWidth) / 2;
+    const offsetY = (videoHeight - cropHeight) / 2;
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+
+    try {
+      const blob: Blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("Failed to capture image"));
+          },
+          "image/webp",
+          1.0
+        );
+      });
+
+      const fileName = `${rugId}_${Date.now()}.webp`;
+
+      // Store locally (not uploaded yet)
+      setCapturedImages((prev) => [...prev, { blob, fileName }]);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to capture image.");
+    }
   };
 
+  // Upload all captured images on "Done"
+  const handleUploadAll = async () => {
+    if (capturedImages.length === 0) {
+      // No new images, just finish with existing images
+      onComplete(images);
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(`Uploading 0 of ${capturedImages.length} images...`);
+
+    const uploadedImages: CloudinaryImage[] = [...images]; // start with previously uploaded
+
+    for (let i = 0; i < capturedImages.length; i++) {
+      const { blob, fileName } = capturedImages[i];
+      setUploadProgress(`Uploading ${i + 1} of ${capturedImages.length} images...`);
+
+      try {
+        const file = new File([blob], fileName, { type: "image/webp" });
+        const uploaded = await uploadImageToCloudinary(file, rugId, images.length + i);
+        uploadedImages.push(uploaded);
+      } catch (e) {
+        alert(`Failed to upload image ${fileName}.`);
+        console.error(e);
+      }
+    }
+
+    setIsUploading(false);
+    setUploadProgress("");
+    setCapturedImages([]); // clear local cache
+    setImages(uploadedImages); // update with all uploaded images
+    onComplete(uploadedImages);
+  };
+
+  // Upload images from device immediately (optional: you can change this to batch upload on Done too)
   const handleUploadWrapper = async (files: FileList) => {
     const arr = Array.from(files);
     setIsUploading(true);
@@ -82,6 +169,16 @@ export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
     setUploadProgress("");
   };
 
+  // Remove captured image before upload
+  const removeCapturedImage = (index: number) => {
+    setCapturedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Remove already uploaded image
+  const removeUploadedImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-4">
@@ -89,7 +186,7 @@ export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <h1 className="add-photos-header">Add Photos - {rugId}</h1>
-        <span>{images.length} photos</span>
+        
       </div>
 
       {isCapturing && (
@@ -110,7 +207,7 @@ export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
             />
             <canvas ref={canvasRef} className="hidden" />
             <div className="mt-4 flex justify-center space-x-4">
-              <Button onClick={captureImageWrapper} className="capture-btn" disabled={isUploading}>
+              <Button onClick={captureImageWrapper} disabled={isUploading}>
                 <Camera className="h-5 mr-1" />
                 Capture
               </Button>
@@ -150,19 +247,40 @@ export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
       )}
 
       {isUploading && (
-        <div className="text-center mb-4 text-blue-600 font-medium">
-          {uploadProgress || "Uploading..."}
-        </div>
+        <div className="text-center mb-4 text-blue-600 font-medium">{uploadProgress || "Uploading..."}</div>
       )}
 
-      <Button className="my-4 w-full" onClick={() => onComplete(images)} disabled={isUploading}>
+      <Button className="my-4 w-full" onClick={handleUploadAll} disabled={isUploading}>
         <Check className="w-4 h-4 mr-2" />
-        Done ({images.length})
+        Done ({images.length + capturedImages.length})
       </Button>
 
-      {images.length > 0 && (
+      {(capturedImages.length > 0 || images.length > 0) && (
         <Card className="mb-6">
           <CardContent>
+            <h3 className="mb-4 font-semibold">Captured Images (Pending Upload)</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+              {capturedImages.map((img, i) => (
+                <div key={img.fileName} className="relative group">
+                  <img
+                    src={URL.createObjectURL(img.blob)}
+                    className="w-full h-32 object-cover rounded"
+                    alt={`Captured Image ${i + 1}`}
+                    style={{ width: "300px", height: "400px" }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100"
+                    onClick={() => removeCapturedImage(i)}
+                    disabled={isUploading}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
             <h3 className="mb-4 font-semibold">Uploaded Images</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {images.map((img, i) => (
@@ -170,14 +288,14 @@ export default function CameraCapture({ rugId, onComplete, onBack }: Props) {
                   <img
                     src={img.secureUrl}
                     className="w-full h-32 object-cover rounded"
-                    alt={`Image ${i + 1}`}
+                    alt={`Uploaded Image ${i + 1}`}
                     style={{ width: "300px", height: "400px" }}
                   />
                   <Button
                     size="sm"
                     variant="destructive"
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100"
-                    onClick={() => setImages(images.filter((_, idx) => idx !== i))}
+                    onClick={() => removeUploadedImage(i)}
                     disabled={isUploading}
                   >
                     <X className="w-4 h-4" />

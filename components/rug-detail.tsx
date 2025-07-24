@@ -8,7 +8,7 @@ import { ArrowLeft, Download, Plus, X, Upload } from "lucide-react"
 import { useState, useRef } from "react"
 import { type Rug, updateRug, deleteRugImage, uploadImageToCloudinary, type CloudinaryImage } from "@/lib/rug-storage"
 import { downloadAsZip } from "@/lib/download-utils"
-
+import CameraCapture from "./CameraCapture/CameraCapture"
 interface RugDetailProps {
   rug: Rug
   onBack: () => void
@@ -22,7 +22,7 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
   const [uploadProgress, setUploadProgress] = useState<string>("")
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   // Add this helper function at the top of the component
   const handleUploadError = (error: any, filename?: string) => {
     console.error("Upload error:", error)
@@ -31,7 +31,16 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
       : "Failed to upload image. Please try again."
     alert(message)
   }
-
+  const handleCameraComplete = (newImages: CloudinaryImage[]) => {
+    // Combine existing images and new captured images
+    const updatedImages = [...images, ...newImages];
+    setImages(updatedImages);
+    updateRug(rug.id, { images: updatedImages });
+    onUpdate();
+    setIsCameraOpen(false);
+  };  const handleCameraBack = () => {
+    setIsCameraOpen(false);
+  };
   // Update the handleAddImages function
   const handleAddImages = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
@@ -102,7 +111,15 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
   }
-
+  if (isCameraOpen) {
+    return (
+      <CameraCapture
+        rugId={rug.id}
+        onComplete={handleCameraComplete}
+        onBack={handleCameraBack}
+      />
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-4xl mx-auto">
@@ -111,16 +128,17 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
             <Button variant="ghost" size="sm" onClick={onBack} className="mr-2">
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">{rug.id}</h1>
+            <h2 className="text-2xl font-bold text-gray-900">{rug.id}</h2>
           </div>
 
           
         </div>
         <div className="flex space-x-2 mb-2">
-            <Button style={{width:"100%"}} variant="outline" onClick={() => fileInputRef.current?.click()}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Images
-            </Button>
+        <Button style={{width:"100%"}} variant="outline" onClick={() => setIsCameraOpen(true)}>
+  <Plus className="w-4 h-4 mr-2" />
+  Add Images
+</Button>
+
             <Button style={{width:"100%"}} onClick={() => downloadAsZip(rug)}>
               <Download className="w-4 h-4 mr-2" />
               Download
@@ -129,10 +147,10 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
         <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleAddImages} className="hidden" />
 
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Rug Details</CardTitle>
+          <CardHeader style={{padding:"10px"}}>
+            <CardTitle style={{fontSize:"16px"}}>Rug Details</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent style={{padding:"10px"}}>
             <div className="grid grid-cols-3 md:grid-cols-4 gap-1 text-sm">
               <div>
                 <span className="font-medium text-gray-600">Type:</span>
@@ -198,11 +216,11 @@ export default function RugDetail({ rug, onBack, onUpdate }: RugDetailProps) {
                 <Button
                   size="sm"
                   variant="destructive"
-                  className="absolute top-2 right-2 w-8 h-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => handleDeleteImage(index)}
                   disabled={isUploading}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3" />
                 </Button>
 
                 <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
