@@ -11,7 +11,6 @@ import {
 } from "@/lib/rug-storage";
 import { downloadAsZip } from "@/lib/download-utils";
 import CameraCapture from "./CameraCapture/CameraCapture";
-import { uploadDeviceImages } from "./CameraCapture/functionality";
 export default function RugDetail({ rug, onBack, onUpdate }) {
   // Update state to handle CloudinaryImage objects
   const [images, setImages] = useState(rug.images);
@@ -111,29 +110,6 @@ export default function RugDetail({ rug, onBack, onUpdate }) {
   const handleDragOver = (e) => {
     e.preventDefault();
   };
-  // if (isCameraOpen) {
-  //   return (
-  //     <CameraCapture
-  //       rugId={rug.id}
-  //       onComplete={handleCameraComplete}
-  //       onBack={handleCameraBack}
-  //     />
-  //   );
-  // }
-  const handleUploadWrapper = async (files) => {
-    setIsUploading(true);
-
-    const uploaded = await uploadDeviceImages(
-      files,
-      rug.id,
-      images.length,
-      setUploadProgress
-    );
-
-    setImages((prev) => [...prev, ...uploaded]);
-    setIsUploading(false);
-    setUploadProgress("");
-  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-4xl mx-auto">
@@ -153,33 +129,7 @@ export default function RugDetail({ rug, onBack, onUpdate }) {
                 onComplete={handleCameraComplete}
                 onBack={handleCameraBack}
               />
-              {/* <h2 className="subtitle">Upload Photos</h2>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files && handleUploadWrapper(e.target.files)}
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="upload-button"
-            >
-              <Upload className="icon-button" />
-              Upload from Device
-            </Button>
-            <p className="or-text">or</p>
-            <Button
-              onClick={()=>setIsCameraOpen(true)}
-              variant="outline"
-              disabled={isUploading}
-              className="camera-button"
-            >
-              <Camera className="icon-button" />
-              Use Camera
-            </Button> */}
+             
             </CardContent>
           </Card>
         )}

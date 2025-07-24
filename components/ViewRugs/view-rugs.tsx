@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react"
 import RugToolbar from "./RugToolbar"
 import RugGrid from "./RugGrid"
 import RugDetail from "../rug-detail"
+import * as XLSX from "xlsx"
 
 interface ViewRugsProps {
   onBack: () => void
@@ -29,6 +30,25 @@ export default function ViewRugs({ onBack }: ViewRugsProps) {
   useEffect(() => {
     filterAndSortRugs()
   }, [searchQuery, sortOption, rugs])
+
+  const handleGenerateExcel = () => {
+    const rows: { Handle: string; URL: string }[] = []
+
+    filteredRugs.forEach((rug) => {
+      rug.images.forEach((img, index) => {
+        rows.push({
+          Handle: rug.id,
+          URL: img.secureUrl, // Assuming your Rug.images has a `secureUrl` field
+        })
+      })
+    })
+
+    const worksheet = XLSX.utils.json_to_sheet(rows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Rugs")
+
+    XLSX.writeFile(workbook, "rugs.xlsx")
+  }
 
   const filterAndSortRugs = () => {
     let filtered = rugs.filter((rug) =>
@@ -81,9 +101,14 @@ export default function ViewRugs({ onBack }: ViewRugsProps) {
           </div>
 
           {filteredRugs.length > 0 && (
-            <Button onClick={handleDownloadAll} variant="outline">
-              Download All
-            </Button>
+            <div className="flex gap-2 flex-wrap">
+              <Button onClick={handleDownloadAll} variant="outline">
+                Download All
+              </Button>
+              <Button onClick={handleGenerateExcel} variant="outline">
+                Generate Excel Sheet
+              </Button>
+            </div>
           )}
         </div>
 
