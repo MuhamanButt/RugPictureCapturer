@@ -84,3 +84,160 @@
   .capture-btn{
     width: 100%;
   }
+
+
+
+
+  .camera-capture-container {
+    padding: 1rem;
+    max-width: 64rem; /* ~1024px */
+    margin: 0 auto;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .card {
+    margin-bottom: 1.5rem;
+  }
+  
+  .card-content {
+    padding: 1rem 1.5rem;
+  }
+  
+  .camera-card .video {
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border: 1px solid #ccc;
+  }
+  
+  .button-group {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .upload-card .upload-content {
+    text-align: center;
+  }
+  
+  .subtitle {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  
+  .upload-button,
+  .camera-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .or-text {
+    margin: 1rem 0;
+    font-size: 0.875rem;
+    color: #6b7280; /* gray-500 */
+  }
+  
+  .error-message {
+    margin-top: 1rem;
+    color: #dc2626; /* red-600 */
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .upload-progress {
+    color: #2563eb; /* blue-600 */
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .done-button {
+    width: 100%;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+  
+  .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .icon-button {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  .images-card .section-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  
+  .images-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .captured-images-grid {
+    grid-template-columns: repeat(2, 1fr);
+    margin-bottom: 1.5rem;
+  }
+  
+  .uploaded-images-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 768px) {
+    .captured-images-grid,
+    .uploaded-images-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .image-wrapper {
+    position: relative;
+  }
+  
+  .image-thumb {
+    width: 300px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 0.375rem;
+  }
+  
+  .group:hover .remove-button {
+    opacity: 1;
+  }
+  
+  .remove-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
